@@ -27,3 +27,56 @@ post$prod = post$LL + dnorm(post$mu, 178, 20, TRUE) + dunif(post$sigma, 0, 50, T
 post$prob = exp(post$prod - max(post$prod))
 
 contour_xyz(post$mu, post$sigma, post$prob)
+
+# 4.3.5
+library(rethinking)
+library(tidyverse)
+data(Howell1)
+d = Howell1 
+d2 = d %>% filter(age >= 18)
+
+flist = alist(
+  height ~ dnorm(mu, sigma),
+  mu ~ dnorm(178, 20),
+  sigma ~ dunif(0, 50)
+)
+
+m4.1 = map(flist, data=d2)
+precis(m4.1)
+vcov(m4.1)
+
+post = extract.samples(m4.1, n=1e4)
+head(post)
+precis(post)
+
+### 4.4
+library(rethinking)
+library(tidyverse)
+data(Howell1)
+d = Howell1 
+d2 = d %>% filter(age >= 18)
+
+m4.3 = map(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b*weight,
+    a ~ dnorm(156, 100),
+    b ~ dnorm(0, 10),
+    sigma ~ dunif(0,50)
+  ),
+  data=d2
+)
+precis(m4.3, corr=TRUE)
+
+d2$weight.c = d2$weight - mean(d2$weight)
+m4.4 = map(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b*weight.c,
+    a ~ dnorm(156, 100),
+    b ~ dnorm(0, 10),
+    sigma ~ dunif(0,50)
+  ),
+  data=d2
+)
+precis(m4.4, corr=TRUE)
